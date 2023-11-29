@@ -1,0 +1,163 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODO LIST - Home</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- jQuery -->
+    <script src="jquery-3.7.1.min.js"></script>
+
+
+    <style>
+        .form-control{
+        padding: 1.375rem .75rem !important;
+    }
+
+        .button-5{
+            align-items: center;
+
+ 
+  background-clip: padding-box;
+  background-color: rgb(237, 199, 8);
+  border: 0.5px solid transparent;
+  border-radius: .5rem;
+  box-shadow: rgba(0, 0, 0, 0.02) 0 1px 3px 0;
+  box-sizing: border-box;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  font-family: system-ui,-apple-system,system-ui,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  justify-content: center;
+  line-height: 1.25;
+  margin: 0;
+  min-height: 3rem;
+  padding: calc(.875rem - 1px) calc(1.5rem - 1px);
+  position: relative;
+  text-decoration: none;
+  transition: all 250ms;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  vertical-align: baseline;
+  width: auto;
+
+        }
+
+        #textbox{
+    display:none;
+    margin-top:10px;
+  }           
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h3 class="pt-5 text-center">Django ToDo App</h3>
+        <div class="row">
+            <h4>My Day</h4>
+            <p class="text-muted">{% now "jS F Y" %}</p>
+            <div class="col-md-7 col-lg-7" style="height: 450px; overflow: scroll;">
+                <!-- List of all the tasks for the day -->
+
+                {% for task in tasks %}
+
+                <div class="card m-1">
+                    <div class="card-body">
+                        <span id="task_{{ task.pk }}_text">{{ task.task }}</span>
+                        <span style="position: relative; float: right;">
+                            <a href="{% url 'mark_as_done' task.pk %}"class="btn btn-success"><i class="fa fa-check"></i> Mark as Done</a>
+                            <a href="{% url 'delete_task' task.pk %}" class="btn btn-danger"><i class="fa fa-trash"></i></a>
+                            <a onclick="showTextBox('{{ task.pk }}')" class="btn btn-primary"><i class="fa fa-pencil"></i></a>
+
+                            <form id="textbox_{{ task.pk }}" onsubmit="saveValue(event, '{{ task.pk }}')" method="post">
+                                {% csrf_token %}
+                                <input type="text" id="inputValue_{{ task.pk }}" name="edited_task" placeholder="Update task">
+                                <input type="submit" value="Submit">
+                            </form>
+                        
+                        </span>
+                    </div>
+                </div>
+               
+                {% endfor %}
+
+            </div>
+            <div class="col-md-5 col-lg-5">
+                <h5>Completed Tasks</h5>
+                <!-- List of all the tasks that have completed -->
+
+                {% for task in completed_tasks %}
+                <div class="card m-1">
+                    <div class="card-body">
+                        {{task.task}}
+                        <a href="{% url 'mark_as_undone' task.pk %}" class="button-5">Mark as UnDone</a>
+                    </div>
+                </div>
+
+                {% endfor %}
+            </div>
+        
+        </div>
+        <div class="row">
+            <div class="col-md-6 col-lg-6 p-0" style="position: absolute; bottom: 50px;">
+                <!-- To Do Form -->
+                <form action="{% url 'addTask' %}" method="POST" >
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <span style="display: flex;">
+                            <input type="text" name="task" class="form-control" placeholder="Add a task">
+                            <button type="submit" class="btn btn-primary" style="width: 200px;"><i class="fa fa-plus"></i> Add</button>
+                        </span>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+   
+    <script>
+
+   
+        function showTextBox(key){
+            console.log(100);
+            console.log(`textbox_${key}`);
+            var textbox = document.getElementById(`textbox_${key}`);
+            textbox.classList.toggle('hidden-textbox')
+        }
+
+        function saveValue(event,key){
+
+            event.preventDefault();
+            var primary_key=key;
+            var enteredValue = document.getElementById(`inputValue_${primary_key}`).value;
+           
+            fetch(`edit/${primary_key}/`, {
+            method: 'POST',
+            headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+        body: JSON.stringify({ value: enteredValue }),
+      })
+      .then(response => response.json())
+      .then(data => console.log(data))
+      .catch(error => console.error('Error:', error));
+
+        }
+
+      
+   
+    </script>
+
+</body>
+</html>
+

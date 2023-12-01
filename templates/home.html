@@ -12,9 +12,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <!-- jQuery -->
-    <script src="jquery-3.7.1.min.js"></script>
-
 
     <style>
         .form-control{
@@ -53,10 +50,7 @@
 
         }
 
-        #textbox{
-    display:none;
-    margin-top:10px;
-  }           
+           
     </style>
 </head>
 <body>
@@ -76,9 +70,11 @@
                         <span style="position: relative; float: right;">
                             <a href="{% url 'mark_as_done' task.pk %}"class="btn btn-success"><i class="fa fa-check"></i> Mark as Done</a>
                             <a href="{% url 'delete_task' task.pk %}" class="btn btn-danger"><i class="fa fa-trash"></i></a>
+                            <!-- When this button is clicked, a textbox/form will appear, after it appears and you press submit task
+                                is updated -->
                             <a onclick="showTextBox('{{ task.pk }}')" class="btn btn-primary"><i class="fa fa-pencil"></i></a>
-
-                            <form id="textbox_{{ task.pk }}" onsubmit="saveValue(event, '{{ task.pk }}')" method="post">
+                            
+                            <form id="textbox_{{ task.pk }}" style="display: none;" onsubmit="saveValue(event, '{{ task.pk }}')" method="post">
                                 {% csrf_token %}
                                 <input type="text" id="inputValue_{{ task.pk }}" name="edited_task" placeholder="Update task">
                                 <input type="submit" value="Submit">
@@ -127,34 +123,40 @@
     <script>
 
    
-        function showTextBox(key){
-            console.log(100);
-            console.log(`textbox_${key}`);
-            var textbox = document.getElementById(`textbox_${key}`);
-            textbox.classList.toggle('hidden-textbox')
-        }
+      function showTextBox(key) {
+        var textbox = document.getElementById(`textbox_${key}`);
+        var isVisible = textbox.style.display === 'block'; // Check if the textbox is visible
 
+        // Toggle visibility
+        textbox.style.display = isVisible ? 'none' : 'block';
+    }
         function saveValue(event,key){
-
+            /*each task object has a primary key associated to it*/
             event.preventDefault();
             var primary_key=key;
-            var enteredValue = document.getElementById(`inputValue_${primary_key}`).value;
-           
-            fetch(`edit/${primary_key}/`, {
+            const enteredValue = document.getElementById(`inputValue_${primary_key}`).value;
+           const base="{% url 'edit' 123 %}".slice(0, -4);
+           const url=`${base}${primary_key}/`;
+
+           console.log(enteredValue);
+            fetch(url, {
             method: 'POST',
             headers: {
                         'Content-Type': 'application/json',
                         'X-CSRFToken': '{{ csrf_token }}'
                     },
-        body: JSON.stringify({ value: enteredValue }),
+        body: JSON.stringify({ edited_task : enteredValue }),
       })
-      .then(response => response.json())
-      .then(data => console.log(data))
+     .then(response => response.json())
+      .then(data => {console.log(data); 
+        var textbox = document.getElementById(`textbox_${key}`);
+        textbox.style.display= 'none';
+    })
       .catch(error => console.error('Error:', error));
-
+      
         }
 
-      
+    
    
     </script>
 

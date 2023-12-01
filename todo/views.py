@@ -1,3 +1,6 @@
+import json
+from django.views.decorators.http import require_POST
+
 from django.shortcuts import render
 from django.shortcuts import HttpResponse,redirect
 from .models import Task
@@ -22,19 +25,20 @@ def mark_as_undone(request,pk):
     task.is_completed= False
     task.save()
     return redirect('home')
-
+@require_POST
 def edit(request,pk):
-     
-     enteredValue= request.POST.get('edited_task')
+     data= json.loads(request.body)
+     enteredValue= data.get('edited_task')
      get_task=get_object_or_404(Task,pk=pk)
-     get_task.task=enteredValue
-     get_task.save()
+
+    
+     if enteredValue is not None:
+         get_task.task= enteredValue
+         get_task.save()
+         return redirect('home')
      return redirect('home')
         
 def delete_task(request,pk):
     get_task =get_object_or_404(Task,pk=pk)
     get_task.delete()
     return redirect('home')
-
-
-#how are you
